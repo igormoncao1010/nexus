@@ -1,36 +1,10 @@
-const SUPABASE_URL = 'https://ibsnupifhuuevennrrjw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlic251cGlmaHV1ZXZlbm5ycmp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1OTU0MjAsImV4cCI6MjEwMzE3MTQyMH0.AdMpNHRead-UgsZSNk-bDm1TK22M-kkJ8FZ-vM5kEtw';
-const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-const form = document.querySelector('#auth-form');
-const email = document.querySelector('#email');
-const password = document.querySelector('#password');
-const showPassword = document.querySelector('#show-password');
-const submit = document.querySelector('#submit');
-const feedback = document.querySelector('#feedback');
-
-client.auth.signOut({ scope: 'local' });
-
-showPassword.addEventListener('click', () => {
-  const visible = password.type === 'text';
-  password.type = visible ? 'password' : 'text';
-  showPassword.textContent = visible ? 'Ver senha' : 'Ocultar senha';
-});
-
-form.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  feedback.textContent = '';
-  submit.disabled = true;
-  submit.textContent = 'Verificando...';
-
-  const { error } = await client.auth.signInWithPassword({
-    email: email.value,
-    password: password.value,
-  });
-
-  submit.disabled = false;
-  submit.textContent = 'Entrar';
-  feedback.textContent = error
-    ? 'E-mail ou senha incorretos.'
-    : 'Acesso autorizado.';
-});
+const URL='https://ibsnupifhuuevennrrjw.supabase.co',KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlic251cGlmaHV1ZXZlbm5ycmp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1OTU0MjAsImV4cCI6MjEwMzE3MTQyMH0.AdMpNHRead-UgsZSNk-bDm1TK22M-kkJ8FZ-vM5kEtw',db=window.supabase.createClient(URL,KEY),$=s=>document.querySelector(s);let user,profile,friend,channel;const fallback='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect width="100%25" height="100%25" fill="%23171717"/%3E%3Ctext x="50%25" y="58%25" text-anchor="middle" fill="white" font-size="55"%3E%3F%3C/text%3E%3C/svg%3E';
+db.auth.signOut({scope:'local'});$('#show-password').onclick=()=>{let v=$('#password').type==='text';$('#password').type=v?'password':'text';$('#show-password').textContent=v?'Ver senha':'Ocultar senha'};
+$('#auth-form').onsubmit=async e=>{e.preventDefault();$('#feedback').textContent='';$('#submit').disabled=true;$('#submit').textContent='Verificando...';let {data,error}=await db.auth.signInWithPassword({email:$('#email').value,password:$('#password').value});$('#submit').disabled=false;$('#submit').textContent='Entrar';if(error){$('#feedback').textContent='E-mail ou senha incorretos.';return}user=data.user;$('.login-page').hidden=true;$('#app').hidden=false;await loadProfile();await loadFriends()};
+async function loadProfile(){let {data}=await db.from('profiles').select('*').eq('id',user.id).maybeSingle();if(!data){let name=user.email.split('@')[0].slice(0,30);({data}=await db.from('profiles').insert({id:user.id,display_name:name.length<2?'user':name}).select().single())}profile=data;if(!profile)return;$('#my-avatar').src=$('#profile-avatar').src=profile.avatar_url||fallback;$('#display-name').value=profile.display_name;$('#invite-code').textContent=profile.invite_code}
+async function loadFriends(){let {data}=await db.rpc('get_my_friends'),list=$('#friend-list');if(!data?.length){list.innerHTML='<p class="no-contacts">Nenhum amigo adicionado.</p>';return}list.innerHTML=data.map(f=>`<button class="contact"><img src="${f.avatar_url||fallback}"><span><b>${safe(f.display_name)}</b><small>Clique para conversar</small></span></button>`).join('');list.querySelectorAll('.contact').forEach((b,i)=>b.onclick=()=>openChat(data[i]))}
+$('#friend-form').onsubmit=async e=>{e.preventDefault();let {data,error}=await db.rpc('add_friend_by_code',{code_input:$('#friend-code').value});$('#friend-feedback').textContent=error?error.message:data;$('#friend-code').value='';if(!error)loadFriends()};$('#copy-code').onclick=()=>navigator.clipboard.writeText(profile.invite_code);
+async function openChat(f){friend=f;$('#empty-chat').hidden=true;$('#active-chat').hidden=false;$('#chat-avatar').src=f.avatar_url||fallback;$('#chat-name').textContent=f.display_name;await loadMessages();if(channel)await db.removeChannel(channel);channel=db.channel('chat-'+user.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages'},p=>{let m=p.new;if((m.sender_id===user.id&&m.receiver_id===friend.id)||(m.sender_id===friend.id&&m.receiver_id===user.id))addMessage(m)}).subscribe()}
+async function loadMessages(){let {data}=await db.from('direct_messages').select('*').or(`and(sender_id.eq.${user.id},receiver_id.eq.${friend.id}),and(sender_id.eq.${friend.id},receiver_id.eq.${user.id})`).order('created_at');$('#messages').innerHTML='';(data||[]).forEach(addMessage)}function addMessage(m){let d=document.createElement('div');d.className='bubble '+(m.sender_id===user.id?'mine':'');d.textContent=m.content;$('#messages').appendChild(d);$('#messages').scrollTop=$('#messages').scrollHeight}
+$('#message-form').onsubmit=async e=>{e.preventDefault();let input=$('#message'),content=input.value.trim();if(!content)return;let {error}=await db.from('direct_messages').insert({sender_id:user.id,receiver_id:friend.id,content});if(!error)input.value=''};
+$('#profile-button').onclick=()=>$('#profile-dialog').showModal();$('#close-profile').onclick=()=>$('#profile-dialog').close();$('#profile-form').onsubmit=async e=>{e.preventDefault();let {error}=await db.from('profiles').update({display_name:$('#display-name').value.trim()}).eq('id',user.id);$('#profile-feedback').textContent=error?error.message:'Perfil salvo.';if(!error)loadProfile()};$('#avatar-input').onchange=async e=>{let file=e.target.files[0];if(!file||file.size>3145728)return;let path=`${user.id}/avatar.${file.name.split('.').pop()}`,{error}=await db.storage.from('avatars').upload(path,file,{upsert:true});if(error)return;let {data}=db.storage.from('avatars').getPublicUrl(path);await db.from('profiles').update({avatar_url:data.publicUrl+'?v='+Date.now()}).eq('id',user.id);loadProfile()};$('#logout').onclick=async()=>{await db.auth.signOut();location.reload()};function safe(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
