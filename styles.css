@@ -34,6 +34,13 @@ input {
   letter-spacing: .35em;
 }
 
+.product-label {
+  margin: -58px 0 64px;
+  color: #777;
+  font-size: 10px;
+  letter-spacing: .08em;
+}
+
 h1 {
   margin: 0 0 10px;
   font-size: 36px;
