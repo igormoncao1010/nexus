@@ -1,5 +1,37 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NEXUS // private network</title><link rel="stylesheet" href="styles.css"><style>.simple-login{display:grid!important;place-items:center;min-height:100dvh;background:#000!important;color:#fff!important}.simple-login .simple-card{width:min(390px,calc(100% - 40px))}.simple-login .simple-brand{margin-bottom:70px;color:#fff;font:700 18px Arial,sans-serif;letter-spacing:.35em}.simple-login h1{margin:0 0 10px;color:#fff;font:600 34px Arial,sans-serif;letter-spacing:-.03em}.simple-login p{margin:0 0 40px;color:#888;font:14px/1.6 Arial,sans-serif}.simple-login form{display:flex;flex-direction:column;gap:22px}.simple-login label{color:#fff;font:11px Arial,sans-serif;letter-spacing:.08em}.simple-login input{width:100%;margin-top:10px;padding:15px 0;border:0;border-bottom:1px solid #444;outline:0;background:#000;color:#fff;font:14px Arial,sans-serif}.simple-login input:focus{border-color:#fff!important;box-shadow:none!important}.simple-login label div{display:flex}.simple-login label div button{margin-top:10px;border:0;border-bottom:1px solid #444;background:#000;color:#fff}.simple-login .primary{margin-top:12px;padding:16px;border:1px solid #fff;background:#fff;color:#000;font:700 12px Arial,sans-serif;letter-spacing:.1em}.simple-login .primary:hover{background:#000;color:#fff;box-shadow:none}.simple-login output{color:#fff;font:11px Arial,sans-serif}.simple-login .access-note{margin-top:28px;color:#555;font:9px Arial,sans-serif;text-align:center;letter-spacing:.08em}@media(max-width:500px){.simple-login .simple-brand{margin-bottom:50px}}</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script><script src="script.js" defer></script></head><body>
-<div class="noise"></div><main id="login" class="simple-login"><section class="simple-card"><div class="simple-brand">NEXUS</div><h1>Acessar</h1><p>Entre com suas credenciais para continuar.</p><form id="auth-form"><label>E-MAIL<input id="email" type="email" autocomplete="email" required placeholder="seu@email.com"></label><label>SENHA<div><input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="••••••••"><button id="show-password" type="button">VER</button></div></label><button id="submit" class="primary">ENTRAR</button><output id="feedback"></output></form><div class="access-note">ACESSO RESTRITO</div></section></main>
-<main id="panel" class="panel" hidden><aside class="sidebar"><div class="brand">NEXUS<span>_</span></div><nav><button class="active" data-view="friends">01 <span>REDE</span></button><button data-view="profile">02 <span>IDENTIDADE</span></button></nav><div class="system"><i></i>SISTEMA ONLINE</div><button id="logout" class="logout">[ DESCONECTAR ]</button></aside><section class="workspace"><header><div><small>PAINEL / <span id="section-name">REDE</span></small><h1 id="greeting">OLÁ, OPERADOR</h1></div><div class="header-profile"><img id="header-avatar" alt="Foto do perfil"><span id="header-name">carregando...</span></div></header>
-<div id="friends-view" class="view"><section class="invite-grid"><article class="module invite-module"><div class="module-title"><span>01</span><b>SEU CÓDIGO DE CONVITE</b><i>● ATIVO</i></div><p>Compartilhe este código para estabelecer uma conexão.</p><div class="code-row"><strong id="invite-code">--------</strong><button id="copy-code">COPIAR</button></div></article><article class="module add-module"><div class="module-title"><span>02</span><b>ADICIONAR CONEXÃO</b></div><p>Insira o código recebido de outro usuário.</p><form id="friend-form"><input id="friend-code" maxlength="8" placeholder="CÓDIGO"><button>VINCULAR</button></form><output id="friend-feedback"></output></article></section><section class="module network-module"><div class="module-title"><span>03</span><b>MINHA REDE</b><i id="friend-count">0 CONEXÕES</i></div><div id="friend-list" class="friend-list"><div class="empty"><b>[ NENHUMA CONEXÃO ]</b><p>Use um código de convite para adicionar seu primeiro contato.</p></div></div></section></div>
-<div id="profile-view" class="view" hidden><section class="module profile-module"><div class="module-title"><span>04</span><b>IDENTIDADE DIGITAL</b></div><div class="profile-editor"><label class="avatar-upload"><img id="profile-avatar" alt="Foto do perfil"><span>ALTERAR FOTO</span><input id="avatar-input" type="file" accept="image/png,image/jpeg,image/webp" hidden></label><form id="profile-form"><label>CODINOME<input id="display-name" maxlength="30" required></label><label>IDENTIFICADOR<input id="profile-email" disabled></label><button class="primary">[ SALVAR IDENTIDADE ]</button><output id="profile-feedback"></output></form></div></section></div></section></main></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Acesso à plataforma Nexus">
+  <title>Nexus — Login</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <main class="login-page">
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="brand">NEXUS</div>
+      <h1 id="login-title">Acessar</h1>
+      <p>Entre com suas credenciais para continuar.</p>
+
+      <form id="auth-form">
+        <label for="email">E-mail</label>
+        <input id="email" type="email" autocomplete="email" required placeholder="seu@email.com">
+
+        <div class="password-label">
+          <label for="password">Senha</label>
+          <button id="show-password" type="button">Ver senha</button>
+        </div>
+        <input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="••••••••">
+
+        <button id="submit" class="submit" type="submit">Entrar</button>
+        <output id="feedback" aria-live="polite"></output>
+      </form>
+
+      <small>Acesso restrito</small>
+    </section>
+  </main>
+</body>
+</html>

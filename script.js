@@ -1,11 +1,36 @@
-const URL='https://ibsnupifhuuevennrrjw.supabase.co',KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlic251cGlmaHV1ZXZlbm5ycmp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1OTU0MjAsImV4cCI6MjEwMzE3MTQyMH0.AdMpNHRead-UgsZSNk-bDm1TK22M-kkJ8FZ-vM5kEtw',db=window.supabase.createClient(URL,KEY);let user=null,profile=null;const $=id=>document.getElementById(id),fallback='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect width="100%25" height="100%25" fill="%230b1711"/%3E%3Ctext x="50%25" y="55%25" text-anchor="middle" fill="%234cff9a" font-size="55" font-family="monospace"%3E%3F%3C/text%3E%3C/svg%3E';
-$('show-password').onclick=()=>{let i=$('password');i.type=i.type==='password'?'text':'password';$('show-password').textContent=i.type==='password'?'VER':'OCULTAR'};
-$('auth-form').onsubmit=async e=>{e.preventDefault();$('feedback').textContent='';$('submit').disabled=true;$('submit').textContent='AGUARDE...';let r=await db.auth.signInWithPassword({email:$('email').value,password:$('password').value});$('submit').disabled=false;$('submit').textContent='ENTRAR';$('feedback').textContent=r.error?'E-mail ou senha incorretos.':''};
-db.auth.onAuthStateChange((_e,s)=>openSession(s));db.auth.signOut({scope:'local'}).then(()=>openSession(null));async function openSession(session){user=session?.user||null;$('login').hidden=!!user;$('panel').hidden=!user;$('login').style.display=user?'none':'grid';$('panel').style.display=user?'grid':'none';if(!user)return;await loadProfile();await loadFriends()}
-async function loadProfile(){let {data}=await db.from('profiles').select('*').eq('id',user.id).maybeSingle();if(!data){const {data:created}=await db.from('profiles').insert({id:user.id,display_name:user.user_metadata.display_name||user.email.split('@')[0]}).select().single();data=created}profile=data;if(!profile)return;const avatar=profile.avatar_url||fallback;$('header-avatar').src=avatar;$('profile-avatar').src=avatar;$('header-name').textContent=profile.display_name;$('greeting').textContent='OLÁ, '+profile.display_name.toUpperCase();$('invite-code').textContent=profile.invite_code;$('display-name').value=profile.display_name;$('profile-email').value=user.email}
-$('copy-code').onclick=async()=>{await navigator.clipboard.writeText(profile.invite_code);$('copy-code').textContent='COPIADO';setTimeout(()=>$('copy-code').textContent='COPIAR',1500)};
-$('friend-form').onsubmit=async e=>{e.preventDefault();let code=$('friend-code').value.trim().toUpperCase();let {data,error}=await db.rpc('add_friend_by_code',{code_input:code});$('friend-feedback').textContent=error?error.message:data;$('friend-code').value='';if(!error)loadFriends()};
-async function loadFriends(){let {data}=await db.rpc('get_my_friends');const list=$('friend-list');$('friend-count').textContent=(data?.length||0)+' CONEXÕES';if(!data?.length){list.innerHTML='<div class="empty"><b>[ NENHUMA CONEXÃO ]</b><p>Use um código de convite para adicionar seu primeiro contato.</p></div>';return}list.innerHTML=data.map(f=>`<article class="friend"><img src="${f.avatar_url||fallback}" alt=""><div><strong>${escapeHtml(f.display_name)}</strong><small>ID // ${f.invite_code}</small></div></article>`).join('')}
-$('avatar-input').onchange=async e=>{const file=e.target.files[0];if(!file)return;if(file.size>3*1024*1024){$('profile-feedback').textContent='Imagem maior que 3 MB.';return}let ext=file.name.split('.').pop(),path=`${user.id}/avatar.${ext}`;let {error}=await db.storage.from('avatars').upload(path,file,{upsert:true});if(error){$('profile-feedback').textContent=error.message;return}let {data}=db.storage.from('avatars').getPublicUrl(path);await db.from('profiles').update({avatar_url:data.publicUrl+'?v='+Date.now()}).eq('id',user.id);await loadProfile()};
-$('profile-form').onsubmit=async e=>{e.preventDefault();let name=$('display-name').value.trim();let {error}=await db.from('profiles').update({display_name:name}).eq('id',user.id);$('profile-feedback').textContent=error?error.message:'IDENTIDADE ATUALIZADA.';if(!error)loadProfile()};
-document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-view]').forEach(x=>x.classList.remove('active'));b.classList.add('active');let view=b.dataset.view;$('friends-view').hidden=view!=='friends';$('profile-view').hidden=view!=='profile';$('section-name').textContent=view==='friends'?'REDE':'IDENTIDADE'});$('logout').onclick=()=>db.auth.signOut();function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+const SUPABASE_URL = 'https://ibsnupifhuuevennrrjw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlic251cGlmaHV1ZXZlbm5ycmp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1OTU0MjAsImV4cCI6MjEwMzE3MTQyMH0.AdMpNHRead-UgsZSNk-bDm1TK22M-kkJ8FZ-vM5kEtw';
+const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const form = document.querySelector('#auth-form');
+const email = document.querySelector('#email');
+const password = document.querySelector('#password');
+const showPassword = document.querySelector('#show-password');
+const submit = document.querySelector('#submit');
+const feedback = document.querySelector('#feedback');
+
+client.auth.signOut({ scope: 'local' });
+
+showPassword.addEventListener('click', () => {
+  const visible = password.type === 'text';
+  password.type = visible ? 'password' : 'text';
+  showPassword.textContent = visible ? 'Ver senha' : 'Ocultar senha';
+});
+
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  feedback.textContent = '';
+  submit.disabled = true;
+  submit.textContent = 'Verificando...';
+
+  const { error } = await client.auth.signInWithPassword({
+    email: email.value,
+    password: password.value,
+  });
+
+  submit.disabled = false;
+  submit.textContent = 'Entrar';
+  feedback.textContent = error
+    ? 'E-mail ou senha incorretos.'
+    : 'Acesso autorizado.';
+});
